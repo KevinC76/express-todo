@@ -4,6 +4,9 @@ import {
   getDocs,
   serverTimestamp,
   setDoc,
+  updateDoc,
+  getDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase.js';
 
@@ -45,6 +48,52 @@ export const postData = async (req, res) => {
   }
 };
 
-export const putData = async () => {};
+export const putData = async (req, res) => {
+  const { id } = req.params;
 
-export const deleteData = async () => {};
+  if (!id) {
+    return;
+  }
+
+  const dataRef = doc(db, db_collection, id);
+  const docSnap = await getDoc(dataRef);
+
+  if (!docSnap) {
+    return;
+  }
+
+  const currentValue = docSnap.data().status;
+
+  try {
+    await updateDoc(dataRef, {
+      status: !currentValue,
+    });
+    res.status(200).json({ message: 'success update data' });
+  } catch (error) {
+    console.log('error: ', error);
+    res
+      .status(500)
+      .json({ message: 'Fail to update data', error: error.message });
+  }
+};
+
+export const deleteData = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const dataRef = doc(db, db_collection, id);
+    const docSnap = await getDoc(dataRef);
+
+    if (!docSnap) {
+      return;
+    }
+
+    await deleteDoc(dataRef);
+    res.status(200).json({ message: 'success delete data' });
+  } catch (error) {
+    console.log('error: ', error);
+    res
+      .status(500)
+      .json({ message: 'Fail to delete data', error: error.message });
+  }
+};
